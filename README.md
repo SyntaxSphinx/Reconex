@@ -75,6 +75,14 @@ Custom output directory:
 python -m scripts.generate_data --records 1000 --seed 42 --output-dir data/my_dataset
 ```
 
+### Evaluate Reconciliation
+
+Evaluate the deterministic engine against `ground_truth.json` (evaluation only; the engine does not read ground truth):
+
+```bash
+python -m scripts.evaluate --data-dir data/generated
+```
+
 ### Generated Files
 
 The generator produces the following files in `data/generated/`:
