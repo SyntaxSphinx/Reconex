@@ -1,6 +1,6 @@
-# LedgerPilot
+# Reconex
 
-**LedgerPilot** is an AI-assisted Finance Controller for merchant settlement reconciliation, designed for a fintech hackathon.
+**Reconex** is an AI-assisted Finance Controller for merchant settlement reconciliation, designed for a fintech hackathon.
 
 The eventual system will reconcile:
 1. Merchant payment records
