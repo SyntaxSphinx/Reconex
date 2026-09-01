@@ -1,0 +1,2 @@
+bank_transaction_id,transaction_date,description,amount,transaction_type,utr
+bank_txn_821024_000001,2024-01-31T22:44:00,Settlement credit for batch batch_923927_000001,10495002,credit,UTR202401316406444

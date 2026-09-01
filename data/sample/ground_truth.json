@@ -1,0 +1,149 @@
+{
+  "seed": 42,
+  "num_records": 100,
+  "total_anomalies": 5,
+  "anomalies": [
+    {
+      "anomaly_id": "anom_000001",
+      "anomaly_type": "MISSING_SETTLEMENT",
+      "affected_entity_id": "pay_216970_000031",
+      "affected_entity_type": "payment",
+      "expected_state": "Settlement record should exist",
+      "actual_state": "Settlement record missing; related bank credit is unchanged",
+      "variance": null,
+      "related_ids": {
+        "payment_id": "pay_216970_000031",
+        "order_id": "order_407757_000031",
+        "removed_entity_id": "setl_521947_000031",
+        "settlement_id": "batch_704596_000000",
+        "settlement_utr": "UTR202401164188992",
+        "related_bank_transaction_id": "bank_txn_418635_000000",
+        "removed_credit_paise": 67995
+      },
+      "description": "Payment pay_216970_000031 captured but settlement setl_521947_000031 removed; bank credit bank_txn_418635_000000 still exists"
+    },
+    {
+      "anomaly_id": "anom_000002",
+      "anomaly_type": "MISSING_BANK_CREDIT",
+      "affected_entity_id": "bank_txn_418635_000000",
+      "affected_entity_type": "bank_transaction",
+      "expected_state": "Bank credit should exist",
+      "actual_state": "Bank credit missing",
+      "variance": null,
+      "related_ids": {
+        "removed_bank_transaction_id": "bank_txn_418635_000000",
+        "settlement_utr": "UTR202401164188992",
+        "settlement_ids": [
+          "batch_704596_000000"
+        ],
+        "affected_entity_ids": [
+          "setl_367095_000000",
+          "setl_146542_000001",
+          "setl_843215_000002",
+          "setl_557239_000003",
+          "setl_101773_000004",
+          "setl_645175_000005",
+          "setl_945687_000006",
+          "setl_664607_000007",
+          "setl_820221_000008",
+          "setl_854377_000009",
+          "setl_877991_000010",
+          "setl_872840_000011",
+          "setl_803204_000012",
+          "setl_306606_000013",
+          "setl_481913_000014",
+          "setl_552248_000015",
+          "setl_173372_000016",
+          "setl_796503_000017",
+          "setl_446239_000018",
+          "setl_753425_000019",
+          "setl_429164_000020",
+          "setl_795612_000021",
+          "setl_989208_000022",
+          "setl_230679_000023",
+          "setl_854717_000024",
+          "setl_414910_000025",
+          "setl_631756_000026",
+          "setl_424308_000027",
+          "setl_799287_000028",
+          "setl_528231_000029",
+          "setl_442027_000030",
+          "setl_831076_000032",
+          "setl_410016_000033",
+          "setl_681343_000034",
+          "setl_233470_000035",
+          "setl_301158_000036",
+          "setl_540869_000037",
+          "setl_797229_000038",
+          "setl_497562_000039",
+          "setl_810219_000040",
+          "setl_884475_000041",
+          "setl_282480_000042",
+          "setl_745414_000043",
+          "setl_696750_000044",
+          "setl_415568_000045",
+          "setl_525800_000046",
+          "setl_674553_000047",
+          "setl_974224_000048",
+          "setl_100425_000049"
+        ]
+      },
+      "description": "Settlement batch UTR UTR202401164188992 complete but bank credit removed"
+    },
+    {
+      "anomaly_id": "anom_000003",
+      "anomaly_type": "DUPLICATE",
+      "affected_entity_id": "setl_525800_000046",
+      "affected_entity_type": "settlement",
+      "expected_state": "Single settlement record",
+      "actual_state": "Duplicate settlement record exists",
+      "variance": null,
+      "related_ids": {
+        "original_entity_id": "setl_525800_000046",
+        "duplicate_entity_id": "setl_525800_000046_DUP",
+        "payment_id": "pay_132938_000046",
+        "order_id": "order_446479_000046",
+        "settlement_id": "batch_704596_000000"
+      },
+      "description": "Settlement setl_525800_000046 duplicated as setl_525800_000046_DUP"
+    },
+    {
+      "anomaly_id": "anom_000004",
+      "anomaly_type": "REFUND_MISMATCH",
+      "affected_entity_id": "setl_664607_000007_RFND",
+      "affected_entity_type": "settlement",
+      "expected_state": "Settlement refund amount should equal payment refund_amount 331471 paise",
+      "actual_state": "Settlement refund amount is 397765 paise",
+      "variance": 66294,
+      "related_ids": {
+        "payment_id": "pay_391369_000007",
+        "order_id": "order_263032_000007",
+        "refund_entity_id": "setl_664607_000007_RFND",
+        "source_entity_id": "setl_664607_000007",
+        "settlement_id": "batch_704596_000000",
+        "payment_refund_amount": 331471,
+        "settlement_refund_amount": 397765
+      },
+      "description": "Payment pay_391369_000007 refund_amount 331471 disagrees with settlement refund 397765"
+    },
+    {
+      "anomaly_id": "anom_000005",
+      "anomaly_type": "UNMATCHED_REFERENCE",
+      "affected_entity_id": "setl_397571_000063",
+      "affected_entity_type": "settlement",
+      "expected_state": "UTR should be UTR202401316406444",
+      "actual_state": "UTR corrupted to UTR202401316406430",
+      "variance": null,
+      "related_ids": {
+        "entity_id": "setl_397571_000063",
+        "settlement_id": "batch_923927_000001",
+        "payment_id": "pay_152578_000063",
+        "order_id": "order_712554_000063",
+        "original_utr": "UTR202401316406444",
+        "corrupted_utr": "UTR202401316406430",
+        "related_bank_transaction_id": "bank_txn_821024_000001"
+      },
+      "description": "Settlement UTR corrupted from UTR202401316406444 to UTR202401316406430"
+    }
+  ]
+}
