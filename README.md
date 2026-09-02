@@ -2,39 +2,37 @@
 
 **Reconex** is an AI-assisted Finance Controller for merchant settlement reconciliation, designed for a fintech hackathon.
 
-The eventual system will reconcile:
+The system reconciles:
 1. Merchant payment records
-2. Razorpay-inspired settlement reconciliation records  
+2. Razorpay-inspired settlement reconciliation records
 3. Merchant bank transactions
 
-against known ground truth, detect exceptions, and use an LLM to investigate unresolved exceptions.
+A deterministic engine classifies matches, pending states, and exceptions. An independent harness evaluates that engine against synthetic `ground_truth.json`. An LLM investigates eligible unresolved exceptions and returns a structured recommendation. Ground truth is for evaluation only; it is never used during reconciliation or AI investigation.
 
-## Current Phase: Phase 1 - Data Generation
+## Current Phase: Phase 3B — AI Exception Investigation
 
-**Phase 1 Goal**: Build the foundation for synthetic data generation with controlled anomaly injection.
+Phases 1–3B are implemented: synthetic data generation, deterministic reconciliation, independent evaluation, and bounded AI investigation of reconciliation exceptions.
 
 ### What's Implemented
 
-- ✅ Clean Python backend project structure
-- ✅ Typed domain models (Pydantic v2) for Payments, Settlement Records, Bank Transactions
-- ✅ Synthetic data generator with reproducible seeds
-- ✅ Controlled anomaly injection (6 anomaly types)
-- ✅ Ground-truth generation for evaluation
-- ✅ Automated test suite (pytest)
-- ✅ Minimal FastAPI health-check endpoint
-- ✅ Project documentation
+- Typed domain models (Pydantic v2) for payments, settlement records, and bank transactions
+- Synthetic data generator with reproducible seeds and controlled anomaly injection
+- Ground-truth generation for **evaluation only**
+- Deterministic reconciliation engine (integer-paise arithmetic; payment-level and batch-level results)
+- Independent evaluation harness against `ground_truth.json`
+- AI investigator for eligible exceptions: bounded evidence, structured finding, confidence, and recommended next action
+- Minimal FastAPI health-check endpoint
+- Automated test suite (**124 tests** currently passing)
 
-### What's NOT Implemented (Yet)
+### What's NOT Implemented
 
-- ❌ Reconciliation engine
-- ❌ Exception detection and classification
-- ❌ AI/LLM investigation
-- ❌ Frontend
-- ❌ Database persistence
-- ❌ Authentication
-- ❌ Razorpay live API integration
-
-These features will be added in future phases.
+- Frontend
+- Database persistence
+- Authentication
+- Live Razorpay API integration
+- Autonomous agents
+- Automatic AI financial resolution (AI cannot modify records or mark exceptions resolved)
+- Production deployment
 
 ## Installation
 
@@ -123,6 +121,9 @@ backend/
   app/
     models/           # Pydantic domain models
     generator/        # Synthetic data generation
+    reconciliation/   # Deterministic reconciliation engine
+    evaluation/       # Independent evaluation harness
+    investigation/    # AI investigator (exceptions only)
     main.py           # FastAPI application
 scripts/
   generate_data.py    # Data generation script
@@ -130,7 +131,9 @@ tests/                # pytest test suite
 data/
   generated/          # Generated datasets (gitignored)
 docs/
-  data-model.md       # Data model documentation
+  data-model.md               # Data model documentation
+  reconciliation-rules.md     # Deterministic reconciliation rules
+  ai-investigation-spec.md    # AI investigation boundaries
 ```
 
 ## Anomaly Types
@@ -145,6 +148,38 @@ Phase 1 implements 6 anomaly families:
 6. **UNMATCHED_REFERENCE** - Corrupted UTR or matching identifier
 
 See `docs/data-model.md` for detailed specifications.
+
+## AI Usage Disclosure
+
+Reconex uses AI **only** to investigate reconciliation exceptions that the deterministic
+engine has already classified. The deterministic engine remains the financial source of truth.
+
+AI is used for:
+- exception investigation and evidence synthesis
+- root-cause hypothesis and explanation
+- investigation confidence assessment
+- recommending the next operational action
+
+AI is **not** used for:
+- authoritative financial calculations
+- deterministic reconciliation or transaction matching
+- modifying payments, settlements, bank records, IDs, UTRs, amounts or timestamps
+- creating, deleting or auto-resolving financial records
+
+The AI layer receives only bounded evidence produced by the deterministic engine, never
+`ground_truth.json`. Every finding must cite supplied evidence IDs; uncited, malformed or
+low-confidence responses are escalated to human review, and any AI failure leaves the
+deterministic reconciliation result unchanged.
+
+LLM configuration is read from environment variables (no keys in the repository):
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `RECONEX_LLM_API_KEY` | Provider API key | unset (AI disabled) |
+| `RECONEX_LLM_MODEL` | Model name | `gpt-4o-mini` |
+| `RECONEX_LLM_BASE_URL` | OpenAI-compatible base URL | `https://api.openai.com/v1` |
+| `RECONEX_LLM_TIMEOUT_SECONDS` | Request timeout | `30` |
+| `RECONEX_AI_CONFIDENCE_THRESHOLD` | Escalate below this confidence | `0.75` |
 
 ## Technology Stack
 

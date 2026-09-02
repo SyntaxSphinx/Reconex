@@ -1,4 +1,4 @@
-"""Domain models for LedgerPilot."""
+"""Domain models for Reconex."""
 
 from .payment import Payment, PaymentStatus
 from .settlement import SettlementRecord, SettlementEntityType

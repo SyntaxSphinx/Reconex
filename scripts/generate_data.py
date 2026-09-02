@@ -124,7 +124,7 @@ def write_ground_truth_json(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Generate synthetic financial data for LedgerPilot"
+        description="Generate synthetic financial data for Reconex"
     )
     parser.add_argument(
         "--records",

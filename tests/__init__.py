@@ -1,1 +1,1 @@
-"""Tests for LedgerPilot."""
+"""Tests for Reconex."""

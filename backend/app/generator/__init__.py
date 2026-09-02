@@ -1,4 +1,4 @@
-"""Synthetic data generator for LedgerPilot."""
+"""Synthetic data generator for Reconex."""
 
 from .config import (
     GeneratorConfig,

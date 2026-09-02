@@ -1,10 +1,10 @@
-# LedgerPilot Data Model
+# Reconex Data Model
 
-This document describes the data model for LedgerPilot Phase 1.
+This document describes the data model for Reconex Phase 1.
 
 ## Overview
 
-LedgerPilot works with three core datasets:
+Reconex works with three core datasets:
 
 1. **Merchant Payments** - Payment transactions initiated by customers
 2. **Settlement Reconciliation Records** - Settlement processing records linking payments to settlement batches
