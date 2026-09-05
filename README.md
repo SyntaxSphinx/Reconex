@@ -1,177 +1,101 @@
 # Reconex
 
-**Reconex** is an AI-assisted Finance Controller for merchant settlement reconciliation, designed for a fintech hackathon.
+**Reconex** is an AI-assisted Finance Controller for merchant settlement reconciliation (fintech hackathon simulation).
 
-The system reconciles:
-1. Merchant payment records
-2. Razorpay-inspired settlement reconciliation records
-3. Merchant bank transactions
+It reconciles three synthetic ledgers:
 
-A deterministic engine classifies matches, pending states, and exceptions. An independent harness evaluates that engine against synthetic `ground_truth.json`. An LLM investigates eligible unresolved exceptions and returns a structured recommendation. Ground truth is for evaluation only; it is never used during reconciliation or AI investigation.
+1. Merchant payment records  
+2. Razorpay-inspired settlement reconciliation records  
+3. Merchant bank transactions  
 
-## Current Phase: Phase 3B — AI Exception Investigation
+A **deterministic** engine is the financial source of truth. An optional LLM may investigate eligible exceptions using bounded evidence only. Ground truth exists for evaluation and is never used during reconciliation or AI investigation.
 
-Phases 1–3B are implemented: synthetic data generation, deterministic reconciliation, independent evaluation, and bounded AI investigation of reconciliation exceptions.
+## What's Implemented
 
-### What's Implemented
-
-- Typed domain models (Pydantic v2) for payments, settlement records, and bank transactions
-- Synthetic data generator with reproducible seeds and controlled anomaly injection
-- Ground-truth generation for **evaluation only**
-- Deterministic reconciliation engine (integer-paise arithmetic; payment-level and batch-level results)
+- Synthetic data generation with reproducible seeds and controlled anomaly injection
+- Deterministic reconciliation engine (integer-paise arithmetic; payment- and batch-level results)
+- Reconciliation **runs** with scenario selection and persisted run history
+- Deterministic failure **scenarios** (e.g. Normal Day, Refund Spike, Settlement Delay, Duplicate Payment, Bank File Issue)
+- FastAPI backend exposing runs, payments, investigations, analytics, and health
+- React operations console: Overview, Payments, Investigations, Analytics, and Investigation Detail (deterministic evidence and recommendation)
+- Optional AI-assisted exception investigation via an OpenAI-compatible API (`POST /api/investigations/{id}/run-ai`)
 - Independent evaluation harness against `ground_truth.json`
-- AI investigator for eligible exceptions: bounded evidence, structured finding, confidence, and recommended next action
-- Minimal FastAPI health-check endpoint
-- Automated test suite (**124 tests** currently passing)
+- Backend test suite: **165** tests passing; frontend **lint** and **production build** passing
 
-### What's NOT Implemented
+## What's Not Implemented
 
-- Frontend
-- Database persistence
+- Database persistence (run history is workspace/file-backed for the demo)
 - Authentication
 - Live Razorpay API integration
-- Autonomous agents
-- Automatic AI financial resolution (AI cannot modify records or mark exceptions resolved)
+- Autonomous agents or automatic financial resolution (AI cannot modify records or mark exceptions resolved)
 - Production deployment
 
-## Installation
+## Architecture
+
+```
+Synthetic CSVs  →  Workspace (+ optional scenario)  →  ReconciliationEngine
+                                                              ↓
+                                                    Current run + history
+                                                              ↓
+                              FastAPI (/api/runs, /payments, /investigations, /analytics)
+                                                              ↓
+                                              React operations console (Vite)
+```
+
+**Deterministic vs AI**
+
+| Layer | Role |
+| --- | --- |
+| Deterministic reconciliation | Authoritative. Classifies matches, pending states, and exceptions. Powers Payments, Investigations, Analytics, and Investigation Detail evidence. |
+| AI investigation | Optional and secondary. Runs only after an exception exists, on bounded evidence from the deterministic layer. Never changes ledger data. |
+
+Reconciliation, the console, and Investigation Detail work **without** an LLM or API key. AI assist requires `RECONEX_LLM_API_KEY` and a provider account with available quota/credits.
+
+## Setup
+
+### Backend
 
 ```bash
-# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
+source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-```
 
-## Usage
-
-### Generate Synthetic Data
-
-Generate 1,000 records with seed 42 (default):
-
-```bash
+# Generate synthetic data (if needed)
 python -m scripts.generate_data --records 1000 --seed 42
+
+# Start API (http://127.0.0.1:8000)
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Generate a smaller dataset:
+Health check: http://127.0.0.1:8000/health
+
+### Frontend
 
 ```bash
-python -m scripts.generate_data --records 100 --seed 123
+cd frontend
+npm install
+npm run dev                       # http://localhost:5173 (proxies /api to the backend)
 ```
 
-Generate clean data without anomalies:
+Build / lint:
 
 ```bash
-python -m scripts.generate_data --records 1000 --seed 42 --no-anomalies
+cd frontend
+npm run lint
+npm run build
 ```
 
-Custom output directory:
+### Optional AI investigation
+
+Supply an OpenAI-compatible API key through the **environment only**. Never commit keys or `.env` files.
 
 ```bash
-python -m scripts.generate_data --records 1000 --seed 42 --output-dir data/my_dataset
+# Windows PowerShell (current session)
+$env:RECONEX_LLM_API_KEY = "your-key-here"
+
+# Then start the backend in that same session
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 ```
-
-### Evaluate Reconciliation
-
-Evaluate the deterministic engine against `ground_truth.json` (evaluation only; the engine does not read ground truth):
-
-```bash
-python -m scripts.evaluate --data-dir data/generated
-```
-
-### Generated Files
-
-The generator produces the following files in `data/generated/`:
-
-- **`payments.csv`** - Merchant payment records
-- **`settlement_recon.csv`** - Settlement reconciliation records
-- **`bank_transactions.csv`** - Bank transaction records
-- **`ground_truth.json`** - Ground truth describing injected anomalies (for evaluation only)
-
-**Important**: All generated data is synthetic. Do not use real customer information.
-
-### Run Health Check
-
-Start the FastAPI application:
-
-```bash
-uvicorn backend.app.main:app --reload
-```
-
-Visit http://localhost:8000/health to verify the service is running.
-
-### Run Tests
-
-```bash
-pytest tests/ -v
-```
-
-Run with coverage:
-
-```bash
-pytest tests/ --cov=backend --cov-report=html
-```
-
-## Project Structure
-
-```
-backend/
-  app/
-    models/           # Pydantic domain models
-    generator/        # Synthetic data generation
-    reconciliation/   # Deterministic reconciliation engine
-    evaluation/       # Independent evaluation harness
-    investigation/    # AI investigator (exceptions only)
-    main.py           # FastAPI application
-scripts/
-  generate_data.py    # Data generation script
-tests/                # pytest test suite
-data/
-  generated/          # Generated datasets (gitignored)
-docs/
-  data-model.md               # Data model documentation
-  reconciliation-rules.md     # Deterministic reconciliation rules
-  ai-investigation-spec.md    # AI investigation boundaries
-```
-
-## Anomaly Types
-
-Phase 1 implements 6 anomaly families:
-
-1. **MISSING_SETTLEMENT** - Payment captured but settlement record missing
-2. **MISSING_BANK_CREDIT** - Settlement complete but bank credit missing
-3. **AMOUNT_MISMATCH** - Bank transaction amount differs from expected
-4. **DUPLICATE** - Duplicate settlement records
-5. **REFUND_MISMATCH** - Inconsistency in refund handling
-6. **UNMATCHED_REFERENCE** - Corrupted UTR or matching identifier
-
-See `docs/data-model.md` for detailed specifications.
-
-## AI Usage Disclosure
-
-Reconex uses AI **only** to investigate reconciliation exceptions that the deterministic
-engine has already classified. The deterministic engine remains the financial source of truth.
-
-AI is used for:
-- exception investigation and evidence synthesis
-- root-cause hypothesis and explanation
-- investigation confidence assessment
-- recommending the next operational action
-
-AI is **not** used for:
-- authoritative financial calculations
-- deterministic reconciliation or transaction matching
-- modifying payments, settlements, bank records, IDs, UTRs, amounts or timestamps
-- creating, deleting or auto-resolving financial records
-
-The AI layer receives only bounded evidence produced by the deterministic engine, never
-`ground_truth.json`. Every finding must cite supplied evidence IDs; uncited, malformed or
-low-confidence responses are escalated to human review, and any AI failure leaves the
-deterministic reconciliation result unchanged.
-
-LLM configuration is read from environment variables (no keys in the repository):
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
@@ -181,22 +105,66 @@ LLM configuration is read from environment variables (no keys in the repository)
 | `RECONEX_LLM_TIMEOUT_SECONDS` | Request timeout | `30` |
 | `RECONEX_AI_CONFIDENCE_THRESHOLD` | Escalate below this confidence | `0.75` |
 
+### Tests and evaluation
+
+```bash
+pytest tests/ -v
+python -m scripts.evaluate --data-dir data/generated
+```
+
+## Project Structure
+
+```
+backend/app/
+  models/            # Pydantic domain models
+  generator/         # Synthetic data generation
+  reconciliation/    # Deterministic reconciliation engine
+  evaluation/        # Independent evaluation harness
+  investigation/     # Optional AI investigator (exceptions only)
+  workspace/         # Run store, scenarios, API projections
+  api/               # FastAPI routers and schemas
+  main.py            # Application entry
+frontend/            # React + TypeScript + Vite operations console
+scripts/             # Data generation and evaluation CLIs
+tests/               # pytest suite
+data/generated/      # Synthetic datasets (gitignored)
+data/runs/           # Persisted run history (gitignored)
+docs/                # Data model, reconciliation rules, AI investigation spec
+```
+
+## Anomaly Families
+
+1. **MISSING_SETTLEMENT** — Payment captured but settlement record missing  
+2. **MISSING_BANK_CREDIT** — Settlement complete but bank credit missing  
+3. **AMOUNT_MISMATCH** — Bank amount differs from expected  
+4. **DUPLICATE** — Duplicate settlement records  
+5. **REFUND_MISMATCH** — Refund handling inconsistency  
+6. **UNMATCHED_REFERENCE** — Corrupted UTR or matching identifier  
+
+See `docs/data-model.md` and `docs/reconciliation-rules.md`.
+
+## AI Usage Disclosure
+
+AI is used only to investigate exceptions the deterministic engine has already classified.
+
+**Used for:** evidence synthesis, hypothesis/explanation, confidence, and recommended next action.  
+
+**Not used for:** authoritative calculations, matching, mutating IDs/amounts/UTRs/timestamps, or auto-resolving records.
+
+The AI layer never receives `ground_truth.json`. Findings must cite supplied evidence IDs; uncited, malformed, or low-confidence responses escalate to human review. Provider failures leave the deterministic result unchanged.
+
 ## Technology Stack
 
-- Python 3.11+
-- Pydantic v2 (data validation)
-- FastAPI (API framework)
-- pytest (testing)
+- Python 3.11+, Pydantic v2, FastAPI, uvicorn, pytest  
+- React 19, TypeScript, Vite  
 
-## Important Notes
+## Notes
 
-- All monetary amounts are stored as **integer paise** (1 INR = 100 paise)
-- Fee/tax/variance use integer arithmetic only (`amount * 18 // 1000`, `fee * 18 // 100`)
-- Anomaly counts are rate-based (default 3.5% of records on a 1,000-record dataset)
-- Data generation is **deterministic** — same seed produces byte-for-byte identical output
-- Ground truth is for **evaluation only** - the application does not use it during reconciliation
-- This is a **hackathon simulation**, not a production system
+- Amounts are integer **paise** (1 INR = 100 paise); fee/tax/variance use integer arithmetic only  
+- Data generation is deterministic for a given seed  
+- Generated and run artifacts under `data/` are gitignored  
+- Hackathon simulation — not a production system  
 
 ## License
 
-This is a hackathon project. License TBD.
+Hackathon project. License TBD.

@@ -99,6 +99,9 @@ class CleanDataGenerator:
             )
 
             settlement_id = self._generate_id("batch", batch_num)
+            # One bank UTR per settlement batch (shared across payment lines).
+            # The API projects a unique per-payment display UTR; do not uniquify
+            # here or bank-credit matching and majority-UTR checks break.
             settlement_utr = (
                 f"UTR{settlement_date.strftime('%Y%m%d')}{self.rng.randint(1000000, 9999999)}"
             )
